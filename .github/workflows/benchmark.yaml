@@ -11,8 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - name: Add env
+        run: echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
       - name: Run benchmark
-        run: bun run benchmark.ts | tee output.txt
+        run: bun i && bun run benchmark.ts | tee output.txt
       - name: Download previous benchmark data
         uses: actions/cache@v4
         with:
