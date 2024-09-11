@@ -56,5 +56,5 @@ fs.createReadStream("benchmark/question.csv")
   .on("data", (data: Data) => benchmarkData.push(data))
   .on("end", () => {
     console.log("Benchmark Data Loaded");
-    run(benchmarkData);
+    run(benchmarkData.slice(0, 10));
   });
