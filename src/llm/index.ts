@@ -12,8 +12,6 @@ const llm = new ChatOpenAI({
   temperature: 0,
 });
 
-llm.invoke("");
-
 export class LawLLM implements BenchmarkAble {
   llm: BaseChatModel;
   constructor(llm: BaseChatModel) {

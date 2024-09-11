@@ -1,6 +1,18 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { benchmark } from "./src/lib/llm-benchmark";
 import { LawLLM } from "./src/llm";
+import csv from "csv-parser";
+import fs from "fs";
+
+type Data = {
+  id: string;
+  question: string;
+  level: string;
+  solution: string;
+  chulaKt: string;
+  gpt4o: string;
+  gpt4oWithContext: string;
+};
 
 const model = new ChatOpenAI({
   model: "gpt-4o",
@@ -9,29 +21,40 @@ const model = new ChatOpenAI({
 
 const llm = new LawLLM(model);
 
-const benchmarkResult = [
-  await benchmark(
-    "What is Chula Engineering Computer Department? Answer in one paragraph.",
-    `The Computer Engineering Department at Chulalongkorn University, 
-  commonly referred to as "Chula Engineering," 
-  is part of the Faculty of Engineering at Chulalongkorn University in Bangkok, Thailand.
-  This department offers undergraduate and graduate programs in computer engineering,
-  providing students with a comprehensive education in areas such as 
-  software development, computer systems, artificial intelligence, data science, networking, and cybersecurity.`,
-    llm
-  ),
-];
+const run = async (benchmarkData: Data[]) => {
+  const benchmarkResult: {
+    input: string;
+    llmResult: string;
+    similarity: number;
+  }[] = [];
 
-const avgSimilarity =
-  benchmarkResult.reduce((prev, curr) => prev + curr.similarity, 0) /
-  benchmarkResult.length;
+  for (const data of benchmarkData) {
+    const currentBenchmark = await benchmark(data.question, data.solution, llm);
+    console.log(currentBenchmark);
+    benchmarkResult.push(currentBenchmark);
+  }
 
-console.log(
-  JSON.stringify([
-    {
-      name: "Result Average Similarity",
-      unit: "Percent",
-      value: avgSimilarity * 100,
-    },
-  ])
-);
+  const avgSimilarity =
+    benchmarkResult.reduce((prev, curr) => prev + curr.similarity, 0) /
+    benchmarkResult.length;
+
+  console.log(
+    JSON.stringify([
+      {
+        name: "Result Average Similarity",
+        unit: "Percent",
+        value: avgSimilarity * 100,
+      },
+    ])
+  );
+};
+
+const benchmarkData: Data[] = [];
+
+fs.createReadStream("benchmark/question.csv")
+  .pipe(csv())
+  .on("data", (data: Data) => benchmarkData.push(data))
+  .on("end", () => {
+    console.log("Benchmark Data Loaded");
+    run(benchmarkData);
+  });
