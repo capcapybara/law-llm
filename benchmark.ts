@@ -29,7 +29,13 @@ const run = async (benchmarkData: Data[]) => {
   }[] = [];
 
   for (const data of benchmarkData) {
-    const currentBenchmark = await benchmark(data.question, data.solution, llm);
+    const currentBenchmark = await benchmark(
+      data.question,
+      data.gpt4oWithContext,
+      {
+        chat: async () => data.solution,
+      }
+    );
     console.log(currentBenchmark);
     benchmarkResult.push(currentBenchmark);
   }
@@ -56,5 +62,5 @@ fs.createReadStream("benchmark/question.csv")
   .on("data", (data: Data) => benchmarkData.push(data))
   .on("end", () => {
     console.log("Benchmark Data Loaded");
-    run(benchmarkData.slice(0, 10));
+    run(benchmarkData.slice(0, 30));
   });
